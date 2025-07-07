@@ -19,20 +19,25 @@ pipeline {
         sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
       }
     }
-    environment {
-        JAVA_HOME = '/usr/lib/jvm/java-17-amazon-corretto'
-        PATH = "${JAVA_HOME}/bin:${env.PATH}"
-    }
+    
     stage('Static Code Analysis') {
-      environment {
-        SONAR_URL = "http://3.111.35.52:80"
-      }
-      steps {
-        withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_AUTH_TOKEN')]) {
-          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
-        }
-      }
+  environment {
+    SONAR_URL = "http://3.111.35.52:80"
+  }
+  steps {
+    withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_AUTH_TOKEN')]) {
+      sh '''
+        apt-get update && apt-get install -y openjdk-17-jdk
+        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
+        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+        mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}
+      '''
     }
+  }
+}
+
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "bkv08/ultimate-cicd:${BUILD_NUMBER}"
