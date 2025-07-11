@@ -1,5 +1,5 @@
 def call() {
 
-sh 'Hello This is Keerthivasan'
+sh 'echo Hello This is Keerthivasan'
 
 }
