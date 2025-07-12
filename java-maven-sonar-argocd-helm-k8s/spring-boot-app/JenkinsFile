@@ -65,11 +65,18 @@ pipeline {
                     git config user.email "bkeerthivasancse@gmail.com"
                     git config user.name "Keerthivasan"
                     BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
-                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                    # Replace the image tag with the new build number
+                    sed -i "s|bkv08/ultimate-cicd:[0-9]*|bkv08/ultimate-cicd:${BUILD_NUMBER}|g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+
+                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml || true
+
+                    if ! git diff --cached --quiet; then
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                     git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                '''
+                    else
+                    echo "No changes detected in deployment file, skipping commit."
+                    fi 
+                   '''
             }
         }
     }
